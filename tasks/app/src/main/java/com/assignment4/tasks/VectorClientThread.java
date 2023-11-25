@@ -3,6 +3,7 @@ package com.assignment4.tasks;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.Arrays;
 
 public class VectorClientThread implements Runnable {
 
@@ -11,6 +12,7 @@ public class VectorClientThread implements Runnable {
     byte[] receiveData = new byte[1024];
 
     int id;
+
     public VectorClientThread(DatagramSocket clientSocket, VectorClock vcl, int id) {
 
         this.clientSocket = clientSocket;
@@ -20,15 +22,37 @@ public class VectorClientThread implements Runnable {
 
     @Override
     public void run() {
-        String response = "example:[1,1.0.0]"; //update this with the real response string from server
-        /*
-         * Write your code to receive messgaes from the server and update the vector clock
-         */
-        String[] responseMessageArray = response.split(":");
-        /*
-         * you could use "replaceAll("\\p{Punct}", " ").trim().split("\\s+");" for filteing the received message timestamps
-         * update clock and increament local clock (tick) for receiving the message
-         */
-        System.out.println("Server:" +responseMessageArray[0] +" "+ vcl.showClock());
+        while (true) {
+            try {
+                DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(packet);
+                String response = new String(packet.getData(), 0, packet.getLength()).trim();
+
+                String[] responseMessageArray = response.split(":");
+                String responseMessage = responseMessageArray[0];
+
+
+                String[] receivedClockArray = responseMessageArray[1].replaceAll("\\p{Punct}", " ").trim().split("\\s+");
+
+
+                int processId = Integer.parseInt(receivedClockArray[0]);
+                int time = Integer.parseInt(receivedClockArray[1]);
+
+                VectorClock tempClock = new VectorClock(4);
+                tempClock.setVectorClock(processId, time);
+
+
+                // Update the client's vector clock with the temporary clock
+                vcl.updateClock(tempClock);
+                vcl.tick(id);
+
+                System.out.println("Server:" + responseMessageArray[0] + " " + vcl.showClock());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
     }
 }
