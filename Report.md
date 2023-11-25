@@ -2,13 +2,16 @@ Assignment 4
 ------------
 
 # Team Members
+- Leon Luca Klaus Muscat
+- Felix Kappeler
+- Max Beringer
 
 # GitHub link to your (forked) repository (if submitting through GitHub)
 
-...
+>https://github.com/Maxinio-berincini/HSG-HS23-DS-Assignment4
 
 
-# Task 4
+# Task 3
 
 1. What is the causal consistency? Explain it using the happened-before relation.
 >
