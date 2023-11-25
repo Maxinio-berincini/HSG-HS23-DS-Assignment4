@@ -19,15 +19,30 @@ public class LTClientThread implements Runnable {
     @Override
     public void run() {
         String response = null;
-        /*
-         * write your code to continuously receive the response from the server and update the clock value with the received value
-         */
-        System.out.println("Server:" + response + ":" + lc.getCurrentTimestamp());
-        /*
-         * write your code to parse the response. Remember the response you receive is in message:timestamp format.
-         * response.split(":");
-         * update clock every time the client receives a message
-         */
+
+        while (true) {
+            try {
+
+                // receive the response from the server
+                DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(packet);
+
+                // split response into message and timestamp
+                response = new String(packet.getData(),0,packet.getLength());
+                String[] fullResponse = response.split(":");
+                String message = fullResponse[0];
+                int responseTimestamp = Integer.parseInt(fullResponse[1]);
+
+                // update the clock
+                lc.updateClock(responseTimestamp);
+
+                // print message and timestamp
+                System.out.println("Server:" + message + ":" + lc.getCurrentTimestamp());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
 
     }
 }
