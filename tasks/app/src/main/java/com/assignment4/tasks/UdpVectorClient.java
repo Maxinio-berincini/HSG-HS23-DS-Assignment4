@@ -57,6 +57,9 @@ public class UdpVectorClient {
              * write your code to send message to the server. clientSocket.send(messageTosend);
              */
 
+            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+            clientSocket.send(packet);
+
 
             // check if the user wants to see the history
             if(messageBody.equals("history")) {
@@ -69,6 +72,17 @@ public class UdpVectorClient {
                  * You can use the clientSocket.setSoTimeout(timeinmiliseconds); to detect if the all the messages have been received
                  * update the logs list
                  */
+
+                while (true) {
+                    DatagramPacket historyPacket = new DatagramPacket(receiveData, receiveData.length);
+                    try {
+                        clientSocket.receive(historyPacket);
+                        String message = new String(receivePacket.getData());
+                        logs.add(message);
+                    } catch (IOException e) {
+                        break;
+                    }
+                }
 
                 UdpVectorClient uc = new UdpVectorClient();
                 uc.showHistory(logs); // gives out all the unsorted logs stored at the server
