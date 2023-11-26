@@ -53,9 +53,6 @@ public class UdpVectorClient {
             // send the message to the server
             sendData = responseMessage.getBytes();
 
-            /*
-             * write your code to send message to the server. clientSocket.send(messageTosend);
-             */
 
             DatagramPacket packet = new DatagramPacket(sendData, sendData.length, IPAddress, port);
             clientSocket.send(packet);
@@ -66,18 +63,13 @@ public class UdpVectorClient {
                 System.out.println("Receiving the chat history...");
                 logs = new ArrayList<>();
 
-                /*
-                 * write your code to receive the logs, clientSocket.receive(getack);
-                 * it should keep receiving till all the messages are reached.
-                 * You can use the clientSocket.setSoTimeout(timeinmiliseconds); to detect if the all the messages have been received
-                 * update the logs list
-                 */
 
                 while (true) {
                     DatagramPacket historyPacket = new DatagramPacket(receiveData, receiveData.length);
                     try {
                         clientSocket.receive(historyPacket);
-                        String message = new String(receivePacket.getData());
+                        clientSocket.setSoTimeout(1000);
+                        String message = new String(historyPacket.getData(),0,historyPacket.getLength()).trim();
                         logs.add(message);
                     } catch (IOException e) {
                         break;
@@ -111,13 +103,46 @@ public class UdpVectorClient {
         System.out.println("Print sorted conversation using attached vector clocks");
         Map<int[], String> logMap = new HashMap<>();
 
-        /*
-         * write your code to sort the logs (history) in ascending order
-         * to sort the logs, use the clock array, for example, [0,0,1,1] as key the to the logMap.
-         * Since this is a custom sorting, create a custom comparator to sort logs
-         * once sorted print the logs that are following the correct sequence of the message flow
-         * to store the sorted logs for printing you could use LinkedHashMap
-         */
+        for (String log : logs) {
+            String[] responseMessageArray = log.split(":");
+            String[] receivedClockArray = responseMessageArray[1].replaceAll("\\p{Punct}", "").trim().split("\\s+");
+            int[] receivedClock = new int[receivedClockArray.length];
+            for (int i = 0; i < receivedClockArray.length; i++) {
+                receivedClock[i] = Integer.parseInt(receivedClockArray[i]);
+            }
+            logMap.put(receivedClock, responseMessageArray[0]);
+        }
+
+
+
+        Comparator<Map.Entry<int[], String>> clockComparator = new Comparator<Map.Entry<int[], String>>() {
+            @Override
+            public int compare(Map.Entry<int[], String> entry1, Map.Entry<int[], String> entry2) {
+                int[] clock1 = entry1.getKey();
+                int[] clock2 = entry2.getKey();
+                for (int i = 0; i < Math.min(clock1.length, clock2.length); i++) {
+                    if (clock1[i] != clock2[i]) {
+                        return clock1[i] - clock2[i];
+                    }
+                }
+                return clock1.length - clock2.length;
+            }
+        };
+
+        // Extract entries and sort them
+        List<Map.Entry<int[], String>> entries = new ArrayList<>(logMap.entrySet());
+        entries.sort(clockComparator);
+
+        // Populate the LinkedHashMap with sorted entries
+        Map<int[], String> sortedLogMap = new LinkedHashMap<>();
+        for (Map.Entry<int[], String> entry : entries) {
+            sortedLogMap.put(entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<int[], String> entry : sortedLogMap.entrySet()) {
+            System.out.println(entry.getValue() + " " + Arrays.toString(entry.getKey()));
+        }
+
 
     }
 
